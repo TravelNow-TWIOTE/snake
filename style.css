@@ -9,19 +9,29 @@ body {
   height: 100vh;
 }
 
-#infoBtn {
+/* Buttons */
+#infoBtn, #shopBtn {
   position: absolute;
   top: 15px;
-  right: 15px;
-  background: #38bdf8;
-  border: none;
   padding: 10px 15px;
   border-radius: 8px;
+  border: none;
   cursor: pointer;
   font-weight: bold;
 }
 
-#dropdown {
+#infoBtn {
+  right: 15px;
+  background: #38bdf8;
+}
+
+#shopBtn {
+  right: 130px;
+  background: #facc15;
+}
+
+/* Dropdowns */
+#dropdown, #shop {
   position: absolute;
   top: 60px;
   right: 15px;
@@ -29,14 +39,31 @@ body {
   border: 2px solid #38bdf8;
   padding: 15px;
   border-radius: 10px;
+  width: 220px;
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+#shop {
+  right: 130px;
+  border-color: #facc15;
 }
 
 .hidden {
   display: none;
 }
 
-#gameContainer {
-  text-align: center;
+.shopItem {
+  border: 1px solid #444;
+  padding: 8px;
+  margin-bottom: 8px;
+  border-radius: 6px;
+}
+
+button.buyBtn {
+  margin-top: 5px;
+  width: 100%;
+  cursor: pointer;
 }
 
 canvas {
@@ -44,9 +71,4 @@ canvas {
   border: 3px solid #38bdf8;
   border-radius: 10px;
   box-shadow: 0 0 20px #38bdf8;
-}
-
-#ui {
-  margin-top: 10px;
-  font-size: 18px;
 }
