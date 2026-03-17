@@ -3,6 +3,7 @@ const ctx = canvas.getContext("2d");
 
 const scoreEl = document.getElementById("score");
 const highScoreEl = document.getElementById("highScore");
+const coinsEl = document.getElementById("coins");
 
 const infoBtn = document.getElementById("infoBtn");
 const dropdown = document.getElementById("dropdown");
@@ -10,11 +11,28 @@ const dropdown = document.getElementById("dropdown");
 const gridSize = 20;
 const tileCount = canvas.width / gridSize;
 
-let snake, dx, dy, food, score, highScore;
-let gameRunning = true;
+// 🔥 SKINS SYSTEM (expandable for shop)
+const skins = {
+  default: {
+    head: "#4ade80",
+    body: "#22c55e",
+    eye: "#000",
+    food: "#f43f5e"
+  },
+  blue: {
+    head: "#60a5fa",
+    body: "#3b82f6",
+    eye: "#000",
+    food: "#facc15"
+  }
+};
 
+let currentSkin = "default";
+
+let snake, dx, dy, food, score, highScore, coins;
 let speed = 120;
 let lastTime = 0;
+let gameRunning = true;
 
 // INIT
 function startGame() {
@@ -24,10 +42,13 @@ function startGame() {
 
   food = randomFood();
   score = 0;
-  gameRunning = true;
   speed = 120;
+  gameRunning = true;
+
+  coins = parseInt(localStorage.getItem("snakeCoins")) || 0;
 
   scoreEl.textContent = score;
+  coinsEl.textContent = coins;
 
   highScore = localStorage.getItem("snakeHighScore") || 0;
   highScoreEl.textContent = highScore;
@@ -41,7 +62,7 @@ function randomFood() {
   };
 }
 
-// GAME LOOP (NO FREEZE)
+// LOOP
 function loop(timestamp) {
   if (!gameRunning) return;
 
@@ -61,7 +82,6 @@ function update() {
     y: snake[0].y + dy
   };
 
-  // WALL
   if (
     head.x < 0 || head.x >= tileCount ||
     head.y < 0 || head.y >= tileCount
@@ -70,7 +90,6 @@ function update() {
     return;
   }
 
-  // SELF
   for (let part of snake) {
     if (part.x === head.x && part.y === head.y) {
       gameOver();
@@ -82,10 +101,13 @@ function update() {
 
   if (head.x === food.x && head.y === food.y) {
     score++;
-    scoreEl.textContent = score;
+    coins++; // 🪙 COINS SYSTEM
+    localStorage.setItem("snakeCoins", coins);
 
-    // SPEED INCREASE
-    speed = Math.max(60, speed - 3);
+    scoreEl.textContent = score;
+    coinsEl.textContent = coins;
+
+    speed = Math.max(60, speed - 2);
 
     if (score > highScore) {
       highScore = score;
@@ -104,30 +126,42 @@ function draw() {
   ctx.fillStyle = "#020617";
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-  // Animated food
-  const pulse = Math.sin(Date.now() / 200) * 4;
+  const skin = skins[currentSkin];
 
-  ctx.fillStyle = "#f43f5e";
+  // 🍎 Animated Food (better look)
+  const pulse = Math.sin(Date.now() / 150) * 3;
+
+  ctx.fillStyle = skin.food;
   ctx.beginPath();
   ctx.arc(
     food.x * gridSize + gridSize / 2,
     food.y * gridSize + gridSize / 2,
-    gridSize / 2 - 2 + pulse,
+    gridSize / 2 - 3 + pulse,
     0,
     Math.PI * 2
   );
   ctx.fill();
 
-  // Snake (rounded + slither feel)
+  // 🐍 Snake (actual look)
   snake.forEach((part, i) => {
     const x = part.x * gridSize;
     const y = part.y * gridSize;
 
-    ctx.fillStyle = i === 0 ? "#4ade80" : "#22c55e";
+    ctx.fillStyle = i === 0 ? skin.head : skin.body;
 
     ctx.beginPath();
-    ctx.roundRect(x + 2, y + 2, gridSize - 4, gridSize - 4, 8);
+    ctx.roundRect(x + 2, y + 2, gridSize - 4, gridSize - 4, 10);
     ctx.fill();
+
+    // 👀 Eyes on head
+    if (i === 0) {
+      ctx.fillStyle = skin.eye;
+
+      ctx.beginPath();
+      ctx.arc(x + 7, y + 7, 2, 0, Math.PI * 2);
+      ctx.arc(x + 13, y + 7, 2, 0, Math.PI * 2);
+      ctx.fill();
+    }
   });
 }
 
@@ -140,10 +174,10 @@ function gameOver() {
   ctx.fillText("Game Over", 110, 200);
 }
 
-// INPUT (FIXES SCROLL ISSUE)
+// INPUT
 document.addEventListener("keydown", function (e) {
   if (["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"].includes(e.key)) {
-    e.preventDefault(); // 🔥 stops page from moving
+    e.preventDefault();
   }
 
   if (e.key === "ArrowUp" && dy !== 1) {
@@ -160,7 +194,7 @@ document.addEventListener("keydown", function (e) {
   }
 });
 
-// INSTRUCTIONS DROPDOWN
+// UI
 infoBtn.onclick = () => {
   dropdown.classList.toggle("hidden");
 };
