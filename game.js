@@ -7,29 +7,33 @@ const highScoreEl = document.getElementById("highScore");
 const gridSize = 20;
 const tileCount = canvas.width / gridSize;
 
-let snake, direction, food, score, highScore;
-let gameRunning = true;
+let snake;
+let dx;
+let dy;
+let food;
+let score;
+let highScore;
 
-// Timing
-let lastTime = 0;
-let speed = 8;
+let gameInterval;
 
-// Ensure page can receive input
-document.body.tabIndex = 0;
-document.body.focus();
-
-function init() {
+// INIT GAME
+function startGame() {
   snake = [{ x: 10, y: 10 }];
-  direction = { x: 1, y: 0 }; // START MOVING RIGHT (fix)
+  dx = 1; // START MOVING RIGHT
+  dy = 0;
+
   food = randomFood();
   score = 0;
-  gameRunning = true;
   scoreEl.textContent = score;
 
   highScore = localStorage.getItem("snakeHighScore") || 0;
   highScoreEl.textContent = highScore;
+
+  if (gameInterval) clearInterval(gameInterval);
+  gameInterval = setInterval(gameLoop, 120); // consistent timing
 }
 
+// FOOD
 function randomFood() {
   return {
     x: Math.floor(Math.random() * tileCount),
@@ -37,25 +41,20 @@ function randomFood() {
   };
 }
 
-function gameLoop(time) {
-  if (!gameRunning) return;
-
-  if (time - lastTime > 1000 / speed) {
-    update();
-    draw();
-    lastTime = time;
-  }
-
-  requestAnimationFrame(gameLoop);
+// MAIN LOOP
+function gameLoop() {
+  update();
+  draw();
 }
 
+// UPDATE
 function update() {
   const head = {
-    x: snake[0].x + direction.x,
-    y: snake[0].y + direction.y
+    x: snake[0].x + dx,
+    y: snake[0].y + dy
   };
 
-  // Wall collision
+  // WALL COLLISION
   if (
     head.x < 0 || head.x >= tileCount ||
     head.y < 0 || head.y >= tileCount
@@ -64,7 +63,7 @@ function update() {
     return;
   }
 
-  // Self collision
+  // SELF COLLISION
   for (let part of snake) {
     if (part.x === head.x && part.y === head.y) {
       gameOver();
@@ -74,6 +73,7 @@ function update() {
 
   snake.unshift(head);
 
+  // EAT FOOD
   if (head.x === food.x && head.y === food.y) {
     score++;
     scoreEl.textContent = score;
@@ -90,74 +90,56 @@ function update() {
   }
 }
 
+// DRAW
 function draw() {
+  // CLEAR
   ctx.fillStyle = "#020617";
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-  // Food animation
-  const time = Date.now() / 200;
-  const size = gridSize / 2 + Math.sin(time) * 3;
-
+  // FOOD
   ctx.fillStyle = "#f43f5e";
-  ctx.beginPath();
-  ctx.arc(
-    food.x * gridSize + gridSize / 2,
-    food.y * gridSize + gridSize / 2,
-    size,
-    0,
-    Math.PI * 2
+  ctx.fillRect(
+    food.x * gridSize,
+    food.y * gridSize,
+    gridSize,
+    gridSize
   );
-  ctx.fill();
 
-  // Snake
-  snake.forEach((part, index) => {
-    const x = part.x * gridSize;
-    const y = part.y * gridSize;
-
-    const gradient = ctx.createLinearGradient(x, y, x + gridSize, y + gridSize);
-    gradient.addColorStop(0, "#22c55e");
-    gradient.addColorStop(1, "#4ade80");
-
-    ctx.fillStyle = gradient;
-
-    ctx.beginPath();
-    ctx.roundRect(x + 2, y + 2, gridSize - 4, gridSize - 4, 6);
-    ctx.fill();
-
-    if (index === 0) {
-      ctx.shadowColor = "#4ade80";
-      ctx.shadowBlur = 15;
-      ctx.fill();
-      ctx.shadowBlur = 0;
-    }
+  // SNAKE
+  ctx.fillStyle = "#22c55e";
+  snake.forEach((part) => {
+    ctx.fillRect(
+      part.x * gridSize,
+      part.y * gridSize,
+      gridSize - 2,
+      gridSize - 2
+    );
   });
 }
 
+// GAME OVER
 function gameOver() {
-  gameRunning = false;
+  clearInterval(gameInterval);
 
   ctx.fillStyle = "white";
   ctx.font = "30px Arial";
   ctx.fillText("Game Over", 110, 200);
 }
 
-// 🔥 FIXED INPUT HANDLER
+// CONTROLS (THIS WORKS)
 document.addEventListener("keydown", function (e) {
-  const key = e.key;
-
-  if (key === "ArrowUp" && direction.y !== 1) {
-    direction = { x: 0, y: -1 };
-  } else if (key === "ArrowDown" && direction.y !== -1) {
-    direction = { x: 0, y: 1 };
-  } else if (key === "ArrowLeft" && direction.x !== 1) {
-    direction = { x: -1, y: 0 };
-  } else if (key === "ArrowRight" && direction.x !== -1) {
-    direction = { x: 1, y: 0 };
-  } else if (key === "r" || key === "R") {
-    init();
-    requestAnimationFrame(gameLoop);
+  if (e.key === "ArrowUp" && dy !== 1) {
+    dx = 0; dy = -1;
+  } else if (e.key === "ArrowDown" && dy !== -1) {
+    dx = 0; dy = 1;
+  } else if (e.key === "ArrowLeft" && dx !== 1) {
+    dx = -1; dy = 0;
+  } else if (e.key === "ArrowRight" && dx !== -1) {
+    dx = 1; dy = 0;
+  } else if (e.key === "r" || e.key === "R") {
+    startGame();
   }
 });
 
-init();
-requestAnimationFrame(gameLoop);
+// START
+startGame();
