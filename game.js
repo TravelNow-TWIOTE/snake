@@ -13,7 +13,7 @@ const shopDiv = document.getElementById("shop");
 const gridSize = 20;
 const tileCount = canvas.width / gridSize;
 
-// --- SHOP DATA ---
+// --- SHOP DATA (unchanged) ---
 const shopItems = [
   { id:"snake_blue", type:"snake", cost:20 },
   { id:"snake_gold", type:"snake", cost:40 },
@@ -52,10 +52,15 @@ let snake, dx, dy, food, score, highScore, coins;
 let speed = 120;
 let lastMoveTime = 0;
 
+// 🔥 INPUT QUEUE (KEY FIX)
+let nextDirection = { x: 1, y: 0 };
+
 // INIT
 function startGame(){
   snake=[{x:10,y:10}];
   dx=1; dy=0;
+  nextDirection = { x:1, y:0 };
+
   food=randomFood();
   score=0;
   speed=120;
@@ -66,16 +71,18 @@ function startGame(){
   updateUI();
 }
 
-// UI UPDATE
 function updateUI(){
   scoreEl.textContent=score;
   coinsEl.textContent=coins;
   highScoreEl.textContent=highScore;
 }
 
-// LOOP (FIXED)
+// LOOP
 function loop(time){
   if(time - lastMoveTime > speed){
+    dx = nextDirection.x;
+    dy = nextDirection.y;
+
     update();
     lastMoveTime = time;
   }
@@ -122,7 +129,6 @@ function update(){
   }
 }
 
-// FOOD
 function randomFood(){
   return {
     x:Math.floor(Math.random()*tileCount),
@@ -130,7 +136,7 @@ function randomFood(){
   };
 }
 
-// DRAW (SLITHER)
+// DRAW (same slither)
 function draw(){
   const bg=skins[equipped.bg]?.bg || "#020617";
   ctx.fillStyle=bg;
@@ -161,28 +167,34 @@ function draw(){
   ctx.strokeStyle = bodyColor;
   ctx.stroke();
 
-  // head
   const h=snake[0];
-  const hx=h.x*20+10;
-  const hy=h.y*20+10;
-
   ctx.fillStyle=headColor;
   ctx.beginPath();
-  ctx.arc(hx,hy,8,0,Math.PI*2);
+  ctx.arc(h.x*20+10,h.y*20+10,8,0,Math.PI*2);
   ctx.fill();
 }
 
-// INPUT (FIXED)
+// 🔥 FIXED INPUT (ALWAYS WORKS)
 document.addEventListener("keydown",(e)=>{
   if(["ArrowUp","ArrowDown","ArrowLeft","ArrowRight"].includes(e.key)){
     e.preventDefault();
   }
 
-  if(e.key==="ArrowUp" && dy!==1){ dx=0; dy=-1; }
-  else if(e.key==="ArrowDown" && dy!==-1){ dx=0; dy=1; }
-  else if(e.key==="ArrowLeft" && dx!==1){ dx=-1; dy=0; }
-  else if(e.key==="ArrowRight" && dx!==-1){ dx=1; dy=0; }
-  else if(e.key==="r"||e.key==="R"){ startGame(); }
+  if(e.key==="ArrowUp" && dy!==1){
+    nextDirection = {x:0,y:-1};
+  }
+  else if(e.key==="ArrowDown" && dy!==-1){
+    nextDirection = {x:0,y:1};
+  }
+  else if(e.key==="ArrowLeft" && dx!==1){
+    nextDirection = {x:-1,y:0};
+  }
+  else if(e.key==="ArrowRight" && dx!==-1){
+    nextDirection = {x:1,y:0};
+  }
+  else if(e.key==="r"||e.key==="R"){
+    startGame();
+  }
 });
 
 // UI
@@ -193,7 +205,7 @@ shopBtn.onclick=()=>{
   renderShop();
 };
 
-// SHOP (WITH PREVIEWS)
+// SHOP (unchanged)
 function renderShop(){
   shopDiv.innerHTML="<h3>Shop</h3>";
 
