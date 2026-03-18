@@ -9,7 +9,6 @@ body {
   height: 100vh;
 }
 
-/* Buttons */
 #infoBtn, #shopBtn {
   position: absolute;
   top: 15px;
@@ -20,17 +19,9 @@ body {
   font-weight: bold;
 }
 
-#infoBtn {
-  right: 15px;
-  background: #38bdf8;
-}
+#infoBtn { right: 15px; background: #38bdf8; }
+#shopBtn { right: 130px; background: #facc15; }
 
-#shopBtn {
-  right: 130px;
-  background: #facc15;
-}
-
-/* Dropdowns */
 #dropdown, #shop {
   position: absolute;
   top: 60px;
@@ -39,19 +30,14 @@ body {
   border: 2px solid #38bdf8;
   padding: 15px;
   border-radius: 10px;
-  width: 220px;
+  width: 240px;
   max-height: 400px;
   overflow-y: auto;
 }
 
-#shop {
-  right: 130px;
-  border-color: #facc15;
-}
+#shop { right: 130px; border-color: #facc15; }
 
-.hidden {
-  display: none;
-}
+.hidden { display: none; }
 
 .shopItem {
   border: 1px solid #444;
@@ -67,7 +53,6 @@ button.buyBtn {
 }
 
 canvas {
-  background: #020617;
   border: 3px solid #38bdf8;
   border-radius: 10px;
   box-shadow: 0 0 20px #38bdf8;
