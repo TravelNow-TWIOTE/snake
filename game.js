@@ -13,7 +13,7 @@ const shopDiv = document.getElementById("shop");
 const gridSize = 20;
 const tileCount = canvas.width / gridSize;
 
-// --- SHOP ITEMS ---
+// --- SHOP DATA ---
 const shopItems = [
   { id:"snake_blue", type:"snake", cost:20 },
   { id:"snake_gold", type:"snake", cost:40 },
@@ -33,7 +33,6 @@ let equipped = JSON.parse(localStorage.getItem("snakeEquipped")) || {
   snake:"default", food:"default", bg:"default"
 };
 
-// COLORS
 const skins = {
   default:{ head:"#4ade80", body:"#22c55e", food:"#f43f5e", bg:"#020617" },
   snake_blue:{ head:"#60a5fa", body:"#3b82f6" },
@@ -51,8 +50,7 @@ const skins = {
 
 let snake, dx, dy, food, score, highScore, coins;
 let speed = 120;
-let lastTime = 0;
-let progress = 0;
+let lastMoveTime = 0;
 
 // INIT
 function startGame(){
@@ -63,22 +61,25 @@ function startGame(){
   speed=120;
 
   coins=parseInt(localStorage.getItem("snakeCoins"))||0;
+  highScore=localStorage.getItem("snakeHighScore")||0;
+
+  updateUI();
+}
+
+// UI UPDATE
+function updateUI(){
   scoreEl.textContent=score;
   coinsEl.textContent=coins;
-
-  highScore=localStorage.getItem("snakeHighScore")||0;
   highScoreEl.textContent=highScore;
 }
 
-// LOOP
-function loop(t){
-  if(t-lastTime>speed){
+// LOOP (FIXED)
+function loop(time){
+  if(time - lastMoveTime > speed){
     update();
-    progress=0;
-    lastTime=t;
+    lastMoveTime = time;
   }
 
-  progress += 0.15;
   draw();
   requestAnimationFrame(loop);
 }
@@ -87,60 +88,71 @@ function loop(t){
 function update(){
   const head={x:snake[0].x+dx,y:snake[0].y+dy};
 
-  if(head.x<0||head.x>=tileCount||head.y<0||head.y>=tileCount)return startGame();
+  if(head.x<0||head.x>=tileCount||head.y<0||head.y>=tileCount){
+    startGame();
+    return;
+  }
 
-  for(let p of snake) if(p.x===head.x&&p.y===head.y)return startGame();
+  for(let p of snake){
+    if(p.x===head.x && p.y===head.y){
+      startGame();
+      return;
+    }
+  }
 
   snake.unshift(head);
 
-  if(head.x===food.x&&head.y===food.y){
-    score++; coins++;
-    localStorage.setItem("snakeCoins",coins);
-    scoreEl.textContent=score;
-    coinsEl.textContent=coins;
+  if(head.x===food.x && head.y===food.y){
+    score++;
+    coins++;
 
-    speed=Math.max(60,speed-2);
+    localStorage.setItem("snakeCoins",coins);
+
+    speed = Math.max(60, speed-2);
 
     if(score>highScore){
       highScore=score;
       localStorage.setItem("snakeHighScore",highScore);
-      highScoreEl.textContent=highScore;
     }
 
     food=randomFood();
-  } else snake.pop();
+    updateUI();
+  } else {
+    snake.pop();
+  }
 }
 
+// FOOD
 function randomFood(){
-  return {x:Math.floor(Math.random()*tileCount),y:Math.floor(Math.random()*tileCount)};
+  return {
+    x:Math.floor(Math.random()*tileCount),
+    y:Math.floor(Math.random()*tileCount)
+  };
 }
 
-// DRAW (TRUE SLITHER)
+// DRAW (SLITHER)
 function draw(){
-  const bg=skins[equipped.bg]?.bg||"#020617";
+  const bg=skins[equipped.bg]?.bg || "#020617";
   ctx.fillStyle=bg;
   ctx.fillRect(0,0,canvas.width,canvas.height);
 
-  const foodColor=skins[equipped.food]?.food||"#f43f5e";
+  const foodColor=skins[equipped.food]?.food || "#f43f5e";
 
   ctx.fillStyle=foodColor;
   ctx.beginPath();
   ctx.arc(food.x*20+10,food.y*20+10,8+Math.sin(Date.now()/200)*2,0,Math.PI*2);
   ctx.fill();
 
-  const headColor=skins[equipped.snake]?.head||"#4ade80";
-  const bodyColor=skins[equipped.snake]?.body||"#22c55e";
+  const headColor=skins[equipped.snake]?.head || "#4ade80";
+  const bodyColor=skins[equipped.snake]?.body || "#22c55e";
 
   ctx.lineWidth = 14;
   ctx.lineCap = "round";
 
   ctx.beginPath();
-
   snake.forEach((p,i)=>{
-    const next = snake[i+1] || p;
-
-    const x = p.x*20 + (next.x - p.x)*progress + 10;
-    const y = p.y*20 + (next.y - p.y)*progress + 10;
+    const x=p.x*20+10;
+    const y=p.y*20+10;
 
     if(i===0) ctx.moveTo(x,y);
     else ctx.lineTo(x,y);
@@ -150,22 +162,28 @@ function draw(){
   ctx.stroke();
 
   // head
-  const head = snake[0];
-  const hx = head.x*20 + 10;
-  const hy = head.y*20 + 10;
+  const h=snake[0];
+  const hx=h.x*20+10;
+  const hy=h.y*20+10;
 
   ctx.fillStyle=headColor;
   ctx.beginPath();
   ctx.arc(hx,hy,8,0,Math.PI*2);
   ctx.fill();
-
-  // eyes
-  ctx.fillStyle="black";
-  ctx.beginPath();
-  ctx.arc(hx-3,hy-3,2,0,Math.PI*2);
-  ctx.arc(hx+3,hy-3,2,0,Math.PI*2);
-  ctx.fill();
 }
+
+// INPUT (FIXED)
+document.addEventListener("keydown",(e)=>{
+  if(["ArrowUp","ArrowDown","ArrowLeft","ArrowRight"].includes(e.key)){
+    e.preventDefault();
+  }
+
+  if(e.key==="ArrowUp" && dy!==1){ dx=0; dy=-1; }
+  else if(e.key==="ArrowDown" && dy!==-1){ dx=0; dy=1; }
+  else if(e.key==="ArrowLeft" && dx!==1){ dx=-1; dy=0; }
+  else if(e.key==="ArrowRight" && dx!==-1){ dx=1; dy=0; }
+  else if(e.key==="r"||e.key==="R"){ startGame(); }
+});
 
 // UI
 infoBtn.onclick=()=>dropdown.classList.toggle("hidden");
@@ -175,7 +193,7 @@ shopBtn.onclick=()=>{
   renderShop();
 };
 
-// SHOP WITH PREVIEWS
+// SHOP (WITH PREVIEWS)
 function renderShop(){
   shopDiv.innerHTML="<h3>Shop</h3>";
 
@@ -185,8 +203,6 @@ function renderShop(){
 
     const color = skins[item.id]?.body || skins[item.id]?.food || skins[item.id]?.bg || "#888";
 
-    const preview = `<div class="preview" style="background:${color}"></div>`;
-
     const ownedItem=owned[item.id];
     let text="Buy ("+item.cost+")";
 
@@ -195,7 +211,7 @@ function renderShop(){
     }
 
     div.innerHTML=`
-      ${preview}
+      <div class="preview" style="background:${color}"></div>
       <strong>${item.id}</strong>
       <button class="buyBtn">${text}</button>
     `;
@@ -213,7 +229,7 @@ function renderShop(){
         localStorage.setItem("snakeEquipped",JSON.stringify(equipped));
       }
 
-      coinsEl.textContent=coins;
+      updateUI();
       renderShop();
     };
 
