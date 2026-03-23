@@ -22,6 +22,7 @@ const shopItems = [
   { id:"food_gold", type:"food", cost:20 },
   { id:"food_blue", type:"food", cost:40 },
   { id:"food_purple", type:"food", cost:60 },
+  
   { id:"food_waffle", type:"food", cost:1000 },
 
   { id:"bg_space", type:"bg", cost:20 },
