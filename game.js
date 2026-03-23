@@ -22,6 +22,7 @@ const shopItems = [
   { id:"food_gold", type:"food", cost:20 },
   { id:"food_blue", type:"food", cost:40 },
   { id:"food_purple", type:"food", cost:60 },
+  { id:"food_waffle", type:"food", cost:1000 },
 
   { id:"bg_space", type:"bg", cost:20 },
   { id:"bg_matrix", type:"bg", cost:40 },
@@ -42,6 +43,7 @@ const skins = {
   food_gold:{ food:"#facc15" },
   food_blue:{ food:"#60a5fa" },
   food_purple:{ food:"#c084fc" },
+  food_waffle: { food: "#d97706" }, // base waffle color
 
   bg_space:{ bg:"#020617" },
   bg_matrix:{ bg:"#001100" },
@@ -144,10 +146,41 @@ function draw(){
 
   const foodColor=skins[equipped.food]?.food || "#f43f5e";
 
-  ctx.fillStyle=foodColor;
+  if (equipped.food === "food_waffle") {
+  const x = food.x * 20;
+  const y = food.y * 20;
+
+  // waffle base
+  ctx.fillStyle = "#d97706";
+  ctx.fillRect(x + 3, y + 3, 14, 14);
+
+  // grid pattern
+  ctx.strokeStyle = "#92400e";
+  ctx.lineWidth = 1;
+
+  for (let i = 5; i <= 15; i += 4) {
+    ctx.beginPath();
+    ctx.moveTo(x + i, y + 3);
+    ctx.lineTo(x + i, y + 17);
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.moveTo(x + 3, y + i);
+    ctx.lineTo(x + 17, y + i);
+    ctx.stroke();
+  }
+} else {
+  ctx.fillStyle = foodColor;
   ctx.beginPath();
-  ctx.arc(food.x*20+10,food.y*20+10,8+Math.sin(Date.now()/200)*2,0,Math.PI*2);
+  ctx.arc(
+    food.x * 20 + 10,
+    food.y * 20 + 10,
+    8 + Math.sin(Date.now() / 200) * 2,
+    0,
+    Math.PI * 2
+  );
   ctx.fill();
+}
 
   const headColor=skins[equipped.snake]?.head || "#4ade80";
   const bodyColor=skins[equipped.snake]?.body || "#22c55e";
