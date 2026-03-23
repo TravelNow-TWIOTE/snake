@@ -13,7 +13,7 @@ const shopDiv = document.getElementById("shop");
 const gridSize = 20;
 const tileCount = canvas.width / gridSize;
 
-// --- SHOP DATA (unchanged) ---
+// --- SHOP ITEMS ---
 const shopItems = [
   { id:"snake_blue", type:"snake", cost:20 },
   { id:"snake_gold", type:"snake", cost:40 },
@@ -22,8 +22,8 @@ const shopItems = [
   { id:"food_gold", type:"food", cost:20 },
   { id:"food_blue", type:"food", cost:40 },
   { id:"food_purple", type:"food", cost:60 },
-  
-  { id:"food_waffle", type:"food", cost:1000 },
+
+  { id:"food_waffle", type:"food", cost:1000 }, // 🧇 NEW
 
   { id:"bg_space", type:"bg", cost:20 },
   { id:"bg_matrix", type:"bg", cost:40 },
@@ -35,6 +35,7 @@ let equipped = JSON.parse(localStorage.getItem("snakeEquipped")) || {
   snake:"default", food:"default", bg:"default"
 };
 
+// --- SKINS ---
 const skins = {
   default:{ head:"#4ade80", body:"#22c55e", food:"#f43f5e", bg:"#020617" },
   snake_blue:{ head:"#60a5fa", body:"#3b82f6" },
@@ -44,25 +45,26 @@ const skins = {
   food_gold:{ food:"#facc15" },
   food_blue:{ food:"#60a5fa" },
   food_purple:{ food:"#c084fc" },
-  food_waffle: { food: "#d97706" }, // base waffle color
+  food_waffle:{ food:"#d97706" }, // 🧇 NEW
 
   bg_space:{ bg:"#020617" },
   bg_matrix:{ bg:"#001100" },
   bg_light:{ bg:"#e5e7eb" }
 };
 
+// --- GAME ---
 let snake, dx, dy, food, score, highScore, coins;
 let speed = 120;
 let lastMoveTime = 0;
 
-// 🔥 INPUT QUEUE (KEY FIX)
-let nextDirection = { x: 1, y: 0 };
+// 🔥 INPUT QUEUE
+let nextDirection = { x:1, y:0 };
 
 // INIT
 function startGame(){
   snake=[{x:10,y:10}];
   dx=1; dy=0;
-  nextDirection = { x:1, y:0 };
+  nextDirection={x:1,y:0};
 
   food=randomFood();
   score=0;
@@ -74,6 +76,7 @@ function startGame(){
   updateUI();
 }
 
+// UI
 function updateUI(){
   scoreEl.textContent=score;
   coinsEl.textContent=coins;
@@ -139,7 +142,7 @@ function randomFood(){
   };
 }
 
-// DRAW (same slither)
+// DRAW
 function draw(){
   const bg=skins[equipped.bg]?.bg || "#020617";
   ctx.fillStyle=bg;
@@ -147,41 +150,40 @@ function draw(){
 
   const foodColor=skins[equipped.food]?.food || "#f43f5e";
 
-  if (equipped.food === "food_waffle") {
-  const x = food.x * 20;
-  const y = food.y * 20;
+  // 🧇 WAFFLE DRAW
+  if(equipped.food === "food_waffle"){
+    const x = food.x * 20;
+    const y = food.y * 20;
 
-  // waffle base
-  ctx.fillStyle = "#d97706";
-  ctx.fillRect(x + 3, y + 3, 14, 14);
+    ctx.fillStyle = "#d97706";
+    ctx.fillRect(x+3,y+3,14,14);
 
-  // grid pattern
-  ctx.strokeStyle = "#92400e";
-  ctx.lineWidth = 1;
+    ctx.strokeStyle = "#92400e";
+    ctx.lineWidth = 1;
 
-  for (let i = 5; i <= 15; i += 4) {
+    for(let i=5;i<=15;i+=4){
+      ctx.beginPath();
+      ctx.moveTo(x+i,y+3);
+      ctx.lineTo(x+i,y+17);
+      ctx.stroke();
+
+      ctx.beginPath();
+      ctx.moveTo(x+3,y+i);
+      ctx.lineTo(x+17,y+i);
+      ctx.stroke();
+    }
+  } else {
+    ctx.fillStyle=foodColor;
     ctx.beginPath();
-    ctx.moveTo(x + i, y + 3);
-    ctx.lineTo(x + i, y + 17);
-    ctx.stroke();
-
-    ctx.beginPath();
-    ctx.moveTo(x + 3, y + i);
-    ctx.lineTo(x + 17, y + i);
-    ctx.stroke();
+    ctx.arc(
+      food.x*20+10,
+      food.y*20+10,
+      8+Math.sin(Date.now()/200)*2,
+      0,
+      Math.PI*2
+    );
+    ctx.fill();
   }
-} else {
-  ctx.fillStyle = foodColor;
-  ctx.beginPath();
-  ctx.arc(
-    food.x * 20 + 10,
-    food.y * 20 + 10,
-    8 + Math.sin(Date.now() / 200) * 2,
-    0,
-    Math.PI * 2
-  );
-  ctx.fill();
-}
 
   const headColor=skins[equipped.snake]?.head || "#4ade80";
   const bodyColor=skins[equipped.snake]?.body || "#22c55e";
@@ -208,7 +210,7 @@ function draw(){
   ctx.fill();
 }
 
-// 🔥 FIXED INPUT (ALWAYS WORKS)
+// INPUT (WORKS)
 document.addEventListener("keydown",(e)=>{
   if(["ArrowUp","ArrowDown","ArrowLeft","ArrowRight"].includes(e.key)){
     e.preventDefault();
@@ -239,7 +241,7 @@ shopBtn.onclick=()=>{
   renderShop();
 };
 
-// SHOP (unchanged)
+// SHOP
 function renderShop(){
   shopDiv.innerHTML="<h3>Shop</h3>";
 
